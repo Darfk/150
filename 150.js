@@ -11,17 +11,17 @@ var zoom = 200;
 // var camera = new THREE.OrthographicCamera( -1 * zoom * aspect, zoom * aspect, -1 * zoom, zoom, 0, 10 );
 
 var directionalLight = new THREE.DirectionalLight( 0xffffff, 1 );
-directionalLight.position.set( 100, 100, 100 );
+directionalLight.position.set( 0, 50, 100 );
 scene.add(directionalLight);
 
 // var ambientLight = new THREE.AmbientLight( 0xffffff );
 // scene.add(ambientLight);
 
 var camera = new THREE.PerspectiveCamera(95, aspect, 1, 500);
-camera.position.z = 100;
-
-camera.position.y = 50;
+camera.position.z = 150;
+camera.position.y = 10;
 camera.lookAt(new THREE.Vector3());
+
 console.log(camera.rotation);
 
 var renderer = new THREE.WebGLRenderer();
@@ -53,10 +53,10 @@ var Player = function(position) {
   this.body = true;
   this.geometry = new THREE.CubeGeometry(this.size.x,this.size.y,10);
   this.material = new THREE.MeshPhongMaterial( {
-    ambient: 0x000080,
-    color: 0x303060,
-    specular: 0x000080,
-    shininess: 10,
+    ambient: 0x0000ff,
+    color: 0x3030a0,
+    specular: 0x6060ff,
+    shininess: 5,
     shading: THREE.FlatShading
   });
   this.cube = new THREE.Mesh( this.geometry, this.material );
@@ -68,7 +68,7 @@ Player.prototype.thrustLeft = 0.4;
 Player.prototype.thrustRight = 0.4;
 Player.prototype.thrustAirLeft = 0.2;
 Player.prototype.thrustAirRight = 0.2;
-Player.prototype.thrustJump = -6;
+Player.prototype.thrustJump = -10;
 Player.prototype.dragX = 0.1;
 Player.prototype.dragAirX = 0.05;
 Player.prototype.dragY = 0.02;
@@ -115,10 +115,10 @@ var Wall = function (posX, posY, sizeX, sizeY) {
   this.collider = true;
   this.geometry = new THREE.CubeGeometry(sizeX,sizeY,10);
   this.material = new THREE.MeshPhongMaterial( {
-    ambient: 0x80000,
-    color: 0x603030,
-    specular: 0xf00000,
-    shininess: 10,
+    ambient: 0xa00000,
+    color: 0xa03030,
+    specular: 0xffffff,
+    shininess: 50,
     shading: THREE.FlatShading
   });
   this.cube = new THREE.Mesh( this.geometry, this.material );
@@ -137,14 +137,22 @@ var Player = TANGENT.extend(Player,TANGENT.Body);
 var tangentScene = new TANGENT.Scene();
 
 tangentScene.add(new Wall(0, -50, 200, 10));
-tangentScene.add(new Wall(150, 0, 200, 10));
-tangentScene.add(new Wall(100, -25, 25, 25));
+// tangentScene.add(new Wall(150, 0, 200, 10));
+// tangentScene.add(new Wall(100, -25, 25, 25));
+
+
 
 setTimeout(function(){
   var player = new Player();
   tangentScene.add(player);
   track.play();
 }, 1000);
+
+function onStartBeat(track) {
+  if(track.barBeat===3) {
+    tangentScene.add(new Wall(Math.random()*300-150, track.cur * track.bpm / 2, 50, 10));
+  }
+};
 
 function  main(t) {
 
@@ -166,18 +174,16 @@ function  main(t) {
     }
 
     if(track.startBeat) {
+      onStartBeat(track);
       debug.fillRect(10, 20, 10, 10);
     }
-    directionalLight.position.setX(Math.sin(track.cur) * 100);
-    directionalLight.position.setY(Math.cos(track.cur) * 100);
-
+    camera.position.y = 10 + track.cur * track.bpm / 2;
   }
   input.update();
-  // cube.position.x = Math.sin(t/1000) * 10;
   tangentScene.update();
   tangentScene.collide();
   tangentScene.draw();
-  
+
   requestAnimationFrame(main);
   renderer.render(scene, camera);
 }
