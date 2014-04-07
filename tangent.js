@@ -106,9 +106,9 @@ TANGENT.Body.prototype.collide = function (other) {
       this.velocity.y = 0;
       if(this.diff.y < 0) {
         this.position.y -= yPen;
-        this.ground = true;
       }else{
         this.position.y += yPen;
+        this.ground = true;
       }
     }else{
       this.velocity.x = 0;

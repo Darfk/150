@@ -2,3 +2,8 @@ html body {
     margin: 0;
     background: black;
 }
+
+canvas {
+    position: absolute;
+    border: 1px solid red;
+}
