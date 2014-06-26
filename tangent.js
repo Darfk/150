@@ -88,6 +88,8 @@ TANGENT.Body = function () {
   this.adiff = new THREE.Vector2();
 }
 
+TANGENT.Body.prototype.cornerLeniency = 4.0;
+
 TANGENT.Body.prototype.collide = function (other) {
 
   var xPen, yPen;
@@ -102,8 +104,11 @@ TANGENT.Body.prototype.collide = function (other) {
   yPen = this.halves.y + other.halves.y - this.adiff.y;
 
   if(yPen > 0 && xPen > 0) {
+
     if(xPen > yPen) {
-      this.velocity.y = 0;
+      if(xPen > TANGENT.Body.prototype.cornerLeniency) {
+        this.velocity.y = 0;
+      }
       if(this.diff.y < 0) {
         this.position.y -= yPen;
       }else{
@@ -111,7 +116,9 @@ TANGENT.Body.prototype.collide = function (other) {
         this.ground = true;
       }
     }else{
-      this.velocity.x = 0;
+      if(yPen > TANGENT.Body.prototype.cornerLeniency) {
+        this.velocity.x = 0;
+      }
       if(this. diff.x < 0) {
         this.position.x -= xPen;
       }else{
@@ -143,4 +150,32 @@ TANGENT.testShaderMaterial = new THREE.ShaderMaterial({
   vertexShader:"void main() {gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0);}",
   fragmentShader:"void main() {gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);}"
 });
+
+TANGENT.mapShaderMaterial = new THREE.ShaderMaterial({
+  uniforms:{
+    "map" : { type: "t", value: null },
+  },
+  vertexShader:[
+    "varying vec2 vUv;",
+    "void main() {",
+    "vUv = uv;",
+    "gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1);",
+    "}"
+  ].join("\n"),
+
+  fragmentShader: [
+    "uniform sampler2D map;",
+    "varying vec2 vUv;",
+    "void main() {",
+    "gl_FragColor = vec4( 1, 1, 1, 1 );",
+    "vec4 texelColor = texture2D( map, vUv );",
+    "texelColor.a = -1.0;",
+    "gl_FragColor = gl_FragColor * texelColor;",
+    "}"
+
+  ].join("\n")
+  
+});
+
+console.log(TANGENT.mapShaderMaterial);
 
