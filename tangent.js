@@ -177,5 +177,3 @@ TANGENT.mapShaderMaterial = new THREE.ShaderMaterial({
   
 });
 
-console.log(TANGENT.mapShaderMaterial);
-
