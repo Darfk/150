@@ -2,7 +2,7 @@ var aspect = 16/9;
 var height = 720;
 
 var scene = new THREE.Scene();
-var zoom = 200;
+// var zoom = 400;
 // var camera = new THREE.OrthographicCamera( -1 * zoom * aspect, zoom * aspect, -1 * zoom, zoom, 0, 10 );
 
 // var directionalLight = new THREE.DirectionalLight( 0xffffff, 1 );
@@ -21,7 +21,7 @@ brickTexture.minFilter = THREE.NearestFilter
 brickTexture.magFilter = THREE.NearestFilter
 
 var camera = new THREE.PerspectiveCamera(95, aspect, 1, 500);
-camera.position.z = 150;
+camera.position.z = 100;
 camera.position.y = 10;
 camera.lookAt(new THREE.Vector3());
 
@@ -33,6 +33,8 @@ var debug = document.createElement('canvas');
 document.body.appendChild(debug);
 debug = debug.getContext('2d');
 
+var tangentScene = new TANGENT.Scene();
+
 var input = new TANGENT.Input();
 document.body.onkeydown = function (e) {
   input.keyPress(e.keyCode);
@@ -43,25 +45,29 @@ document.body.onkeyup = function (e) {
 };
 
 var world = {
-  gravity: new THREE.Vector2(0, -0.2),
+  gravity: new THREE.Vector2(0, -0.1),
 };
 
 var Player = function(position) {
   this.velocity = new THREE.Vector2();
   this.position = position || new THREE.Vector2();
-  this.size = new THREE.Vector2(25, 40);
-  this.halves = new THREE.Vector2(this.size.x/2, this.size.y/2);
-  this.body = true;
+  this.size = new THREE.Vector2(16, 16);
   this.geometry = new THREE.PlaneGeometry(this.size.x,this.size.y);
   this.material = new THREE.MeshLambertMaterial({map: brickTexture});
   this.cube = new THREE.Mesh( this.geometry, this.material );
-  this.collider = true;
+
+  this.rayDown = new TANGENT.Ray(new THREE.Vector2(), TANGENT.RayDirection.DOWN, 8);
+  this.xBoxCollider = new TANGENT.BoxCollider(new THREE.Vector2(),
+                                              new THREE.Vector2(this.size.x, this.size.y - 8));
+  this.yBoxCollider = new TANGENT.BoxCollider(new THREE.Vector2(),
+                                              new THREE.Vector2(this.size.x - 8, this.size.y));
+
   scene.add( this.cube );
 }
 
-Player.prototype.thrustX = 0.4;
-Player.prototype.thrustAirX = 0.2;
-Player.prototype.thrustJump = -6.5;
+Player.prototype.thrustX = 0.2;
+Player.prototype.thrustAirX = 0.1;
+Player.prototype.thrustJump = -4;
 Player.prototype.dragX = 0.1;
 Player.prototype.dragAirX = 0.05;
 Player.prototype.dragY = 0.02;
@@ -93,10 +99,60 @@ Player.prototype.update = function () {
     this.velocity.x = Math.min(6, this.velocity.x);
   }
   
+  // Do ray collisions
+  this.rayDown.position.x = this.position.x;
+  this.rayDown.position.y = this.position.y;
+
+  tangentScene.RayCast(this.rayDown);
+
+  if(this.rayDown.collisionResults[0]) {
+    // this.position.y += this.rayDown.length - this.rayDown.collisionResults[0].penetration;
+    // this.velocity.y = 0;
+    this.ground = true;
+  }else{
+    this.ground = false;
+  }
+
+  // Do box collisions
+  this.xBoxCollider.position.x = this.position.x;
+  this.xBoxCollider.position.y = this.position.y;
+
+  this.yBoxCollider.position.x = this.position.x;
+  this.yBoxCollider.position.y = this.position.y;
+  
+  var self = this;
+  this.yBoxCollider.OnCollide = function (xPen, yPen, other) {
+    self.position.y += yPen;
+    self.velocity.y = 0;
+  };
+
+  this.xBoxCollider.OnCollide = function (xPen, yPen, other) {
+    self.position.x += xPen;
+    self.velocity.x = 0;
+  };
+
+  tangentScene.ColliderCast(this.yBoxCollider);
+  tangentScene.ColliderCast(this.xBoxCollider);
+
+  // var xMaxPen = 0, yMaxPen = 0;
+  // if(this.boxCollider.collisionResults.length > 0){
+  //   for(var i=0;i<this.boxCollider.collisionResults.length;i++){
+  //     if(Math.abs(this.boxCollider.collisionResults[i].x) > Math.abs(xMaxPen)){
+  //       xMaxPen = this.boxCollider.collisionResults[i].x;
+  //     }
+  //     if(Math.abs(this.boxCollider.collisionResults[i].y) > Math.abs(yMaxPen)){
+  //       yMaxPen = this.boxCollider.collisionResults[i].y;
+  //     }
+  //   }
+  //   if(xMaxPen > yMaxPen) {
+  //     this.position.y += yMaxPen;
+  //   }else{
+  //     this.position.x += xMaxPen;
+  //   }
+  // }
+
   this.velocity.addVectors(this.velocity, world.gravity);
   this.position.addVectors(this.position, this.velocity);
-
-  this.ground = false;
 
 };
 
@@ -110,7 +166,6 @@ var Wall = function (posX, posY, sizeX, sizeY) {
   this.position = new THREE.Vector3(posX, posY, 0);
   this.velocity = new THREE.Vector2();
   this.size = new THREE.Vector2(sizeX, sizeY);
-  this.halves = new THREE.Vector2(sizeX/2, sizeY/2);
   this.collider = true;
   this.geometry = new THREE.PlaneGeometry(sizeX, sizeY, 2, 1);
   this.material = TANGENT.mapShaderMaterial.clone();
@@ -126,26 +181,27 @@ Wall.prototype.draw = function () {
 };
 
 Wall.prototype.update = function () {
-  this.life+=1
 };
 
+//var Player = TANGENT.extend(Player,TANGENT.Body);
+var Wall = TANGENT.extend(Wall,TANGENT.BoxCollider);
 
-var Player = TANGENT.extend(Player,TANGENT.Body);
-var tangentScene = new TANGENT.Scene();
+tangentScene.add(new Wall(0, -64, 16, 16));
+tangentScene.add(new Wall(16, -64, 16, 16));
+tangentScene.add(new Wall(0, -48, 16, 16));
+tangentScene.add(new Wall(16, -64, 16, 16));
 
-for(var i=0;i<100;i++) {
-  tangentScene.add(new Wall(i * 16, -50, 16, 16));
+tangentScene.add(new Wall(16, 32, 16, 16));
+
+for(var i=0;i<10;i++){
+  tangentScene.add(new Wall(i*16+32, -i*4-50, 16, 16));
 }
 
-tangentScene.add(new Wall(20, 20, 16, 16));
-
-
 var player;
-
 player = new Player();
 tangentScene.add(player);
 
-function  main(t) {
+function main(t) {
 
   var cameraLookAt = new THREE.Vector3();
 
@@ -153,13 +209,9 @@ function  main(t) {
   debug.fillStyle = '#fff';
 
   if (player) {
-    //camera.position.y = player.position.y + 50;
     camera.position.x += (player.position.x - camera.position.x) / 5;
     camera.position.y += (player.position.y - camera.position.y) / 5;
-    //cameraLookAt.x += (player.position.x - cameraLookAt.x) / 3;
-    //cameraLookAt.y += camera.position.y = (player.position.y - cameraLookAt.y) / 3;
     cameraLookAt.z = 0;
-    //camera.lookAt(cameraLookAt);
   }
 
 

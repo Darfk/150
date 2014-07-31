@@ -1,5 +1,17 @@
 var TANGENT = {};
 
+TANGENT.ColliderType = {
+  NONE: 0,
+  BOX: 1,
+};
+
+TANGENT.RayDirection = {
+  DOWN: 0,
+  UP: 1,
+  LEFT: 2,
+  RIGHT: 3,
+};
+
 TANGENT.Scene = function () {
     this.entities = [];
 }
@@ -9,17 +21,45 @@ TANGENT.Scene.prototype.add = function(e) {
 }
 
 TANGENT.Scene.prototype.collide = function (){
-  var i, j, l, self = this;
+  return;
+
+  var i, j, k, l, self = this;
   l = this.entities.length;
   for(i=0; i<l; i++) {
-    if(!this.entities[i].body) continue;
-    for(j=0; j<l; j++) {
-      if(!this.entities[j].collider) continue;
-      if(this.entities[i] === this.entities[j]) continue;
-      this.entities[i].collide(this.entities[j]);
+    if(!this.entities[i].rays) continue;
+    for(k=0; k<this.entities[i].rays.length; k++) {
+      this.entities[i].rays[k].collisionResults = [];      
+      for(j=0; j<l; j++) {
+        if(!this.entities[j].collider) continue;
+        if(this.entities[i] === this.entities[j]) continue;
+        this.entities[i].rays[k].collide(this.entities[j]);
+      }
     }
   }
 };
+
+TANGENT.sortCollisionResultsByPenetration = function (a, b) {
+  return a.penetration - b.penetration;
+};
+
+TANGENT.Scene.prototype.RayCast = function(ray) {
+  ray.collisionResults = [];
+  var j, l = this.entities.length;
+  for(j=0; j<l; j++) {
+    if(!this.entities[j].collider) continue;
+    ray.collide(this.entities[j]);
+  }
+  ray.collisionResults.sort(TANGENT.sortCollisionResultsByPenetration);
+}
+
+TANGENT.Scene.prototype.ColliderCast = function(collider) {
+  collider.collisionResults = [];
+  var j, l = this.entities.length;
+  for(j=0; j<l; j++) {
+    if(!this.entities[j].collider) continue;
+    collider.collide(this.entities[j]);
+  }
+}
 
 TANGENT.Scene.prototype.update = function (){
   this.entities.forEach(function (e) {
@@ -81,52 +121,88 @@ TANGENT.Input.prototype.update = function() {
     }
   }
 
-}
+};
 
-TANGENT.Body = function () {
-  this.diff = new THREE.Vector2();
-  this.adiff = new THREE.Vector2();
-}
 
-TANGENT.Body.prototype.cornerLeniency = 4.0;
+TANGENT.Ray = function (position, direction, length) {
+  this.position = position;
+  this.direction = direction;
+  this.length = length;
+  this.collisionResults = [];
+};
 
-TANGENT.Body.prototype.collide = function (other) {
-
-  var xPen, yPen;
-
-  this.diff.subVectors(this.position, other.position);
-  
-  this.adiff.copy(this.diff);
-  this.adiff.x = Math.abs(this.adiff.x);
-  this.adiff.y = Math.abs(this.adiff.y);
-
-  xPen = this.halves.x + other.halves.x - this.adiff.x;
-  yPen = this.halves.y + other.halves.y - this.adiff.y;
-
-  if(yPen > 0 && xPen > 0) {
-
-    if(xPen > yPen) {
-      if(xPen > TANGENT.Body.prototype.cornerLeniency) {
-        this.velocity.y = 0;
-      }
-      if(this.diff.y < 0) {
-        this.position.y -= yPen;
-      }else{
-        this.position.y += yPen;
-        this.ground = true;
-      }
-    }else{
-      if(yPen > TANGENT.Body.prototype.cornerLeniency) {
-        this.velocity.x = 0;
-      }
-      if(this.diff.x < 0) {
-        this.position.x -= xPen;
-      }else{
-        this.position.x += xPen;
+TANGENT.Ray.prototype.collide = function(other) {
+  var penetration;
+//  if(other.colliderType === TANGENT.ColliderType.BOX) {
+    if(this.direction === TANGENT.RayDirection.DOWN) {
+      if(Math.abs(this.position.x - other.position.x) < other.size.x * 0.5){
+        penetration = this.position.y - other.position.y - other.size.y * 0.5;
+        if(penetration < this.length && penetration > 0) {
+          this.collisionResults.push({other:other, penetration:penetration});
+        }
       }
     }
-  }
+//  }
 };
+
+TANGENT.BoxCollider = function (position, size) {
+  this.diff = new THREE.Vector2();
+  this.adiff = new THREE.Vector2();
+  //this.collisionResults = [];
+  this.size = size;
+  this.position = position;
+};
+
+//TANGENT.BoxCollider.prototype.colliderType = TANGENT.ColliderType.BOX;
+TANGENT.BoxCollider.prototype.collide = function (other) {
+  var xPen, yPen;
+  this.diff.subVectors(this.position, other.position);
+
+  var xF = this.size.x * 0.5 + other.size.x * 0.5;
+  var yF = this.size.y * 0.5 + other.size.y * 0.5;
+
+  var xPen = xF - Math.abs(this.diff.x);
+  var yPen = yF - Math.abs(this.diff.y);
+
+  if(yPen > 0 && xPen > 0) {
+    
+    this.OnCollide(
+      xPen * (this.diff.x < 0 ? -1:1),
+      yPen * (this.diff.y < 0 ? -1:1),
+      other
+    );
+    // this.collisionResults.push({
+    // });
+  }
+
+
+  // if(yPen > 0 && xPen > 0) {
+
+  //   if(xPen > yPen) {
+  //     if(xPen > TANGENT.Body.prototype.cornerLeniency) {
+  //       this.velocity.y = 0;
+  //     }
+  //     if(this.diff.y < 0) {
+  //       this.position.y -= yPen;
+  //     }else{
+  //       this.position.y += yPen;
+  //       this.ground = true;
+  //     }
+  //   }else{
+  //     if(yPen > TANGENT.Body.prototype.cornerLeniency) {
+  //       this.velocity.x = 0;
+  //     }
+  //     if(this.diff.x < 0) {
+  //       this.position.x -= xPen;
+  //     }else{
+  //       this.position.x += xPen;
+  //     }
+  //   }
+  // }
+};
+
+//TANGENT.BoxCollider.prototype.cornerLeniency = 4.0;
+
 
 TANGENT.extend = function(dst, src) {
 
@@ -143,7 +219,7 @@ TANGENT.extend = function(dst, src) {
 
   return constructor;
 
-}
+};
 
 TANGENT.testShaderMaterial = new THREE.ShaderMaterial({
   vertexShader:"void main() {gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0);}",
@@ -176,3 +252,7 @@ TANGENT.mapShaderMaterial = new THREE.ShaderMaterial({
   
 });
 
+TANGENT.brk = function () {
+  window.brk = arguments;
+  var p = 0;
+};
