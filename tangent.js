@@ -119,7 +119,7 @@ TANGENT.Body.prototype.collide = function (other) {
       if(yPen > TANGENT.Body.prototype.cornerLeniency) {
         this.velocity.x = 0;
       }
-      if(this. diff.x < 0) {
+      if(this.diff.x < 0) {
         this.position.x -= xPen;
       }else{
         this.position.x += xPen;
@@ -168,7 +168,7 @@ TANGENT.mapShaderMaterial = new THREE.ShaderMaterial({
     "void main() {",
     "gl_FragColor = vec4( 1, 1, 1, 1 );",
     "vec4 texelColor = texture2D( map, vUv );",
-    "texelColor.a = -1.0;",
+    "texelColor.a = 1.0;",
     "gl_FragColor = gl_FragColor * texelColor;",
     "}"
 

@@ -19,14 +19,11 @@ scene.add(pointLight);
 var brickTexture = THREE.ImageUtils.loadTexture('brick.png');
 brickTexture.minFilter = THREE.NearestFilter
 brickTexture.magFilter = THREE.NearestFilter
-console.log(brickTexture);
 
 var camera = new THREE.PerspectiveCamera(95, aspect, 1, 500);
 camera.position.z = 150;
 camera.position.y = 10;
 camera.lookAt(new THREE.Vector3());
-
-console.log(camera.rotation);
 
 var renderer = new THREE.WebGLRenderer();
 renderer.setSize( height * aspect, height );
@@ -62,15 +59,13 @@ var Player = function(position) {
   scene.add( this.cube );
 }
 
-Player.prototype.thrustLeft = 0.4;
-Player.prototype.thrustRight = 0.4;
-Player.prototype.thrustAirLeft = 0.2;
-Player.prototype.thrustAirRight = 0.2;
+Player.prototype.thrustX = 0.4;
+Player.prototype.thrustAirX = 0.2;
 Player.prototype.thrustJump = -6.5;
 Player.prototype.dragX = 0.1;
 Player.prototype.dragAirX = 0.05;
 Player.prototype.dragY = 0.02;
-
+Player.prototype.groundTime;
 Player.prototype.update = function () {
 
   if(this.ground && input.keys[90] === 1) {
@@ -78,20 +73,23 @@ Player.prototype.update = function () {
   }
 
   if ( this.ground ) {
-    //this.velocity.x -= this.velocity.x * this.dragX;
+    if(this.groundTime > 5){
+      this.velocity.x -= this.velocity.x * this.dragX;
+    }
+    this.groundTime += 1;
   }else{
-    //this.velocity.x -= this.velocity.x * this.dragAirX;
+    this.groundTime = 0;
   }
 
-  this.velocity.y -= this.velocity.y * this.dragY;
+  this.velocity.x = Math.max(Math.min(this.velocity.x, 4), -4);
   
   if(input.keys[37] > 0) {
-    this.velocity.x -= this.ground ? this.thrustLeft : this.thrustAirLeft;
+    this.velocity.x -= this.ground ? this.thrustX : this.thrustAirX;
     this.velocity.x = Math.max(-6, this.velocity.x);
   }
 
   if(input.keys[39] > 0) {
-    this.velocity.x += this.ground ? this.thrustRight : this.thrustAirRight;
+    this.velocity.x += this.ground ? this.thrustX : this.thrustAirX;
     this.velocity.x = Math.min(6, this.velocity.x);
   }
   
