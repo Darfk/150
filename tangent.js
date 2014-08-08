@@ -164,9 +164,9 @@ TANGENT.BoxCollider.prototype.collide = function (other) {
   var xPen = xF - Math.abs(this.diff.x);
   var yPen = yF - Math.abs(this.diff.y);
 
-  if(yPen > 0 && xPen > 0) {
+  if(yPen >= 0 && xPen >= 0) {
     
-    this.OnCollide(
+    this.OnCollision(
       xPen * (this.diff.x < 0 ? -1:1),
       yPen * (this.diff.y < 0 ? -1:1),
       other
