@@ -23,7 +23,7 @@ document.body.onkeyup = function (e) {
 };
 
 var world = {
-  gravity: new THREE.Vector2(0, -0.05),
+  gravity: new THREE.Vector2(0, -0.2),
 };
 
 var Player = function(position) {
@@ -33,18 +33,25 @@ var Player = function(position) {
   this.rayDown = new TANGENT.Ray(new THREE.Vector2(), TANGENT.RayDirection.DOWN, 8);
   this.boxCollider = new TANGENT.BoxCollider(new THREE.Vector2(),
                                               new THREE.Vector2(this.size.x, this.size.y));
+  this.physParent = null;
 };
 
-Player.prototype.thrustX = 0.2;
-Player.prototype.thrustAirX = 0.1;
-Player.prototype.thrustJump = -1.9;
-Player.prototype.dragX = 0.1;
-Player.prototype.dragAirX = 0.05;
-Player.prototype.dragY = 0.02;
+Player.prototype.thrustX = 0.1;
+Player.prototype.thrustAirX = 0.05;
+Player.prototype.thrustJump = -4;
+Player.prototype.dragX = 0.2;
+Player.prototype.dragAirX = 0.0;
 Player.prototype.groundTime;
-Player.prototype.update = function () {
+Player.prototype.velocityMaxX = 2;
+Player.prototype.velocityMaxY = 6;
+Player.prototype.groundTimeThreshold = 5;
 
-  this.velocity.x = Math.max(Math.min(this.velocity.x, 2), -2);
+Player.prototype.update = function (t) {
+
+  this.velocity.x = Math.max(Math.min(this.velocity.x, Player.prototype.velocityMaxX),
+                             -Player.prototype.velocityMaxX);
+  this.velocity.y = Math.max(Math.min(this.velocity.y, Player.prototype.velocityMaxY),
+                             -Player.prototype.velocityMaxY);
   
   if(input.keys[37] > 0) {
     this.velocity.x -= this.ground ? this.thrustX : this.thrustAirX;
@@ -61,26 +68,40 @@ Player.prototype.update = function () {
   }
 
   if ( this.ground ) {
-    if(this.groundTime > 5){
-      this.velocity.x -= this.velocity.x * this.dragX;
-    }else{
-      debug.fillText("GroundTime", 10, 30);
-    }
     this.groundTime += 1;
   }else{
     this.groundTime = 0;
   }
- 
+
+  if(!(input.keys[39]||input.keys[37])||(input.keys[39]&&input.keys[37])) {
+    if(this.ground && this.groundTime > Player.prototype.groundTimeThreshold) {
+      this.velocity.x -= Player.prototype.dragX * this.velocity.x;
+    }else{
+      this.velocity.x -= Player.prototype.dragAirX * this.velocity.x;
+    }
+  }
+
+  if(Math.abs(this.velocity.x) < 0.05) {
+    this.velocity.x = 0;
+  }
+
   this.ground = false;
 
   this.velocity.addVectors(this.velocity, world.gravity);
+
+  if(this.physParent) {
+    this.position.addVectors(this.position, this.physParent.deltaPosition);
+  }
+
   this.position.addVectors(this.position, this.velocity);
+
+  this.physParent = null;
 
   this.boxCollider.position.x = this.position.x;
   this.boxCollider.position.y = this.position.y;
 
   var self = this;
-
+  
   this.boxCollider.OnCollision = function (x, y, o){
     if(Math.abs(y) > Math.abs(x)){
       self.position.x += x;
@@ -94,6 +115,9 @@ Player.prototype.update = function () {
       }
       if (y>0) {
         self.ground = true;
+        if(o.nonStationary) {
+          self.physParent = o;
+        }
         debug.fillText("Ground", 10, 20);
       }
 
@@ -135,42 +159,56 @@ var Wall = function (posX, posY, sizeX, sizeY) {
 
 Wall.prototype.draw = function () {
   cx.save();
-  cx.fillStyle='#901010';
+  cx.fillStyle='#606060';
   cx.translate(this.position.x - this.size.x * 0.5, this.position.y - this.size.y * 0.5);
   cx.fillRect(0,0,this.size.x,this.size.y)
   cx.restore();
 };
 
-Wall.prototype.update = function () {
+Wall.prototype.update = function (t) {};
+
+var Platform = function (posX, posY, sizeX, sizeY) {
+  this.life = 0;
+  this.position = new THREE.Vector3(posX, posY, 0);
+  this.origin = new THREE.Vector3(posX, posY, 0);
+  this.velocity = new THREE.Vector2();
+  this.size = new THREE.Vector2(sizeX, sizeY);
+  this.collider = true;
+  this.nonStationary = true;
+  this.deltaPosition = new THREE.Vector2();
 };
 
-//var Player = TANGENT.extend(Player,TANGENT.Body);
-var Wall = TANGENT.extend(Wall,TANGENT.BoxCollider);
+Platform.prototype.draw = function () {
+  cx.save();
+  cx.fillStyle='#606060';
+  cx.translate(this.position.x - this.size.x * 0.5, this.position.y - this.size.y * 0.5);
+  cx.fillRect(0,0,this.size.x,this.size.y)
+  cx.restore();
+};
 
-tangentScene.add(new Wall(0, -64, 16, 16));
-tangentScene.add(new Wall(0, -48, 16, 16));
-tangentScene.add(new Wall(16, -64, 16, 16));
+Platform.prototype.update = function (t) {
+  this.deltaPosition.copy(this.position);
+  this.position.y = this.origin.y + Math.sin(this.origin.x + t * 0.001 * 0.2 * Math.TAU) * 64;
+  this.deltaPosition.subVectors(this.position, this.deltaPosition);
+};
 
-tangentScene.add(new Wall(-16, -64, 16, 16));
-
-tangentScene.add(new Wall(16, 32, 16, 16));
-
-for(var i=0;i<10;i++){
-  tangentScene.add(new Wall(i*16+32, -i*4-50, 16, 16));
-}
+tangentScene.add(new Wall(0, -80, 128, 16));
+tangentScene.add(new Platform(-64, -128, 64, 16));
+tangentScene.add(new Platform(-96, -128, 64, 16));
 
 var player;
 player = new Player();
 tangentScene.add(player);
 
 var camera = new TANGENT.Camera();
+camera.zoom = 2;
 
 function main(t) {
   debug.clearRect(0, 0, debug.canvas.width, debug.canvas.height);
   debug.fillStyle = '#fff';
 
   input.update();
-  tangentScene.update();
+  tangentScene.update(t);
   tangentScene.collide();
 
   cx.clearRect(0, 0, cx.canvas.width, cx.canvas.height);

@@ -1,5 +1,7 @@
 var TANGENT = {};
 
+Math.TAU = Math.PI * 2;
+
 TANGENT.ColliderType = {
   NONE: 0,
   BOX: 1,
@@ -61,9 +63,9 @@ TANGENT.Scene.prototype.ColliderCast = function(collider) {
   }
 }
 
-TANGENT.Scene.prototype.update = function (){
+TANGENT.Scene.prototype.update = function (t){
   this.entities.forEach(function (e) {
-    e.update();
+    e.update(t);
   });
 };
 
@@ -125,7 +127,6 @@ TANGENT.Input.prototype.keyRelease = function (c) {
 }
 
 TANGENT.Input.prototype.update = function() {
-
   for(var i=0;i<255;i++) {
     if(this.keyPressFrame[i]) {
       ++this.keys[i];
@@ -133,7 +134,6 @@ TANGENT.Input.prototype.update = function() {
       this.keys[i] = 0;
     }
   }
-
 };
 
 
