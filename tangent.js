@@ -40,6 +40,20 @@ TANGENT.Scene.prototype.collide = function (){
   }
 };
 
+TANGENT.Scene.prototype.constructEntity = function (constructor, args) {
+  function F() {
+    return constructor.apply(this, args);
+  }
+  F.prototype = constructor.prototype;
+  return new F();  
+};
+
+TANGENT.Scene.prototype.loadScene = function (entityMap, data) {
+  for(var i in data) {
+    this.add(this.constructEntity(entityMap[data[i][0]], data[i].slice(1)));
+  }
+};
+
 TANGENT.sortCollisionResultsByPenetration = function (a, b) {
   return a.penetration - b.penetration;
 };

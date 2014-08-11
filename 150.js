@@ -192,12 +192,23 @@ Platform.prototype.update = function (t) {
   this.deltaPosition.subVectors(this.position, this.deltaPosition);
 };
 
-tangentScene.add(new Wall(0, -80, 128, 16));
-tangentScene.add(new Platform(-64, -128, 64, 16));
-tangentScene.add(new Platform(-96, -128, 64, 16));
+// tangentScene.add(new Wall(0, -80, 128, 16));
+// tangentScene.add(new Platform(-64, -128, 64, 16));
+// tangentScene.add(new Platform(-96, -128, 64, 16));
 
 var player;
 player = new Player();
+
+tangentScene.loadScene({"p":Platform, "w":Wall}, [
+  ["w", 0, -80, 16, 16],
+  ["w", 128, -80, 128, 16],
+
+  ["w", -64, -80, 8, 16],
+  ["w", -96, -80, 8, 16],
+  ["w", -128, -80, 8, 16],
+
+]);
+
 tangentScene.add(player);
 
 var camera = new TANGENT.Camera();
