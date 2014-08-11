@@ -146,7 +146,6 @@ TANGENT.Ray = function (position, direction, length) {
 
 TANGENT.Ray.prototype.collide = function(other) {
   var penetration;
-//  if(other.colliderType === TANGENT.ColliderType.BOX) {
     if(this.direction === TANGENT.RayDirection.DOWN) {
       if(Math.abs(this.position.x - other.position.x) < other.size.x * 0.5){
         penetration = this.position.y - other.position.y - other.size.y * 0.5;
@@ -155,18 +154,15 @@ TANGENT.Ray.prototype.collide = function(other) {
         }
       }
     }
-//  }
 };
 
 TANGENT.BoxCollider = function (position, size) {
   this.diff = new THREE.Vector2();
   this.adiff = new THREE.Vector2();
-  //this.collisionResults = [];
   this.size = size;
   this.position = position;
 };
 
-//TANGENT.BoxCollider.prototype.colliderType = TANGENT.ColliderType.BOX;
 TANGENT.BoxCollider.prototype.collide = function (other) {
   var xPen, yPen;
   this.diff.subVectors(this.position, other.position);
@@ -184,37 +180,8 @@ TANGENT.BoxCollider.prototype.collide = function (other) {
       yPen * (this.diff.y < 0 ? -1:1),
       other
     );
-    // this.collisionResults.push({
-    // });
   }
-
-
-  // if(yPen > 0 && xPen > 0) {
-
-  //   if(xPen > yPen) {
-  //     if(xPen > TANGENT.Body.prototype.cornerLeniency) {
-  //       this.velocity.y = 0;
-  //     }
-  //     if(this.diff.y < 0) {
-  //       this.position.y -= yPen;
-  //     }else{
-  //       this.position.y += yPen;
-  //       this.ground = true;
-  //     }
-  //   }else{
-  //     if(yPen > TANGENT.Body.prototype.cornerLeniency) {
-  //       this.velocity.x = 0;
-  //     }
-  //     if(this.diff.x < 0) {
-  //       this.position.x -= xPen;
-  //     }else{
-  //       this.position.x += xPen;
-  //     }
-  //   }
-  // }
 };
-
-//TANGENT.BoxCollider.prototype.cornerLeniency = 4.0;
 
 TANGENT.extend = function(dst, src) {
 
