@@ -84,6 +84,19 @@ TANGENT.Scene.prototype.destroy = function (){
   });
 };
 
+TANGENT.Camera = function() {
+  this.rotate = 0;
+  this.position = new THREE.Vector2();
+  this.aspect = 1024 / 768.0;
+  this.zoom = 1;
+};
+
+TANGENT.Camera.prototype.frame = function(cx) {
+  cx.translate((cx.canvas.width * 0.5), -(cx.canvas.height * 0.5))
+  cx.scale(this.zoom, this.zoom);
+  cx.translate(-this.position.x, -this.position.y);
+};
+
 TANGENT.Input = function() {
   this.keys = [];
   this.keyPressFrame = [];
@@ -203,7 +216,6 @@ TANGENT.BoxCollider.prototype.collide = function (other) {
 
 //TANGENT.BoxCollider.prototype.cornerLeniency = 4.0;
 
-
 TANGENT.extend = function(dst, src) {
 
   var constructor = function () {
@@ -219,40 +231,4 @@ TANGENT.extend = function(dst, src) {
 
   return constructor;
 
-};
-
-TANGENT.testShaderMaterial = new THREE.ShaderMaterial({
-  vertexShader:"void main() {gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0);}",
-  fragmentShader:"void main() {gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);}"
-});
-
-TANGENT.mapShaderMaterial = new THREE.ShaderMaterial({
-  uniforms:{
-    "map" : { type: "t", value: null },
-  },
-  vertexShader:[
-    "varying vec2 vUv;",
-    "void main() {",
-    "vUv = uv;",
-    "gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1);",
-    "}"
-  ].join("\n"),
-
-  fragmentShader: [
-    "uniform sampler2D map;",
-    "varying vec2 vUv;",
-    "void main() {",
-    "gl_FragColor = vec4( 1, 1, 1, 1 );",
-    "vec4 texelColor = texture2D( map, vUv );",
-    "texelColor.a = 1.0;",
-    "gl_FragColor = gl_FragColor * texelColor;",
-    "}"
-
-  ].join("\n")
-  
-});
-
-TANGENT.brk = function () {
-  window.brk = arguments;
-  var p = 0;
 };

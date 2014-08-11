@@ -1,33 +1,11 @@
 var aspect = 16/9;
 var height = 720;
 
-var scene = new THREE.Scene();
-// var zoom = 400;
-// var camera = new THREE.OrthographicCamera( -1 * zoom * aspect, zoom * aspect, -1 * zoom, zoom, 0, 10 );
-
-// var directionalLight = new THREE.DirectionalLight( 0xffffff, 1 );
-// directionalLight.position.set( 0, 50, 100 );
-// scene.add(directionalLight);
-
-var pointLight = new THREE.PointLight()
-pointLight.position.set( 100, 100, 100 );
-scene.add(pointLight);
-
-// var ambientLight = new THREE.AmbientLight( 0xffffff );
-// scene.add(ambientLight);
-
-var brickTexture = THREE.ImageUtils.loadTexture('brick.png');
-brickTexture.minFilter = THREE.NearestFilter
-brickTexture.magFilter = THREE.NearestFilter
-
-var camera = new THREE.PerspectiveCamera(95, aspect, 1, 500);
-camera.position.z = 100;
-camera.position.y = 10;
-camera.lookAt(new THREE.Vector3());
-
-var renderer = new THREE.WebGLRenderer();
-renderer.setSize( height * aspect, height );
-document.body.appendChild(renderer.domElement);
+var cx = document.createElement('canvas');
+document.body.appendChild(cx);
+cx = cx.getContext('2d');
+cx.canvas.width = 1024;
+cx.canvas.height = 768;
 
 var debug = document.createElement('canvas');
 document.body.appendChild(debug);
@@ -52,20 +30,14 @@ var Player = function(position) {
   this.velocity = new THREE.Vector2();
   this.position = position || new THREE.Vector2();
   this.size = new THREE.Vector2(12, 16);
-  this.geometry = new THREE.PlaneGeometry(this.size.x,this.size.y);
-  this.material = new THREE.MeshLambertMaterial({map: brickTexture});
-  this.cube = new THREE.Mesh( this.geometry, this.material );
-
   this.rayDown = new TANGENT.Ray(new THREE.Vector2(), TANGENT.RayDirection.DOWN, 8);
   this.boxCollider = new TANGENT.BoxCollider(new THREE.Vector2(),
                                               new THREE.Vector2(this.size.x, this.size.y));
-
-  scene.add( this.cube );
-}
+};
 
 Player.prototype.thrustX = 0.2;
 Player.prototype.thrustAirX = 0.1;
-Player.prototype.thrustJump = -2.9;
+Player.prototype.thrustJump = -1.9;
 Player.prototype.dragX = 0.1;
 Player.prototype.dragAirX = 0.05;
 Player.prototype.dragY = 0.02;
@@ -146,8 +118,11 @@ Player.prototype.update = function () {
 };
 
 Player.prototype.draw = function () {
-  this.cube.position.x = this.position.x;
-  this.cube.position.y = this.position.y;
+  cx.save();
+  cx.fillStyle='#109010';
+  cx.translate(this.position.x - this.size.x * 0.5, this.position.y - this.size.y * 0.5);
+  cx.fillRect(0,0,this.size.x,this.size.y)
+  cx.restore();
 };
 
 var Wall = function (posX, posY, sizeX, sizeY) {
@@ -156,17 +131,14 @@ var Wall = function (posX, posY, sizeX, sizeY) {
   this.velocity = new THREE.Vector2();
   this.size = new THREE.Vector2(sizeX, sizeY);
   this.collider = true;
-  this.geometry = new THREE.PlaneGeometry(sizeX, sizeY, 2, 1);
-  this.material = TANGENT.mapShaderMaterial.clone();
-  this.material.map = brickTexture;
-  this.mesh = new THREE.Mesh( this.geometry, this.material );
-  this.mesh.position = this.position;
-  scene.add( this.mesh );
-}
+};
 
 Wall.prototype.draw = function () {
-  if(this.life < 30) {
-  }
+  cx.save();
+  cx.fillStyle='#901010';
+  cx.translate(this.position.x - this.size.x * 0.5, this.position.y - this.size.y * 0.5);
+  cx.fillRect(0,0,this.size.x,this.size.y)
+  cx.restore();
 };
 
 Wall.prototype.update = function () {
@@ -191,27 +163,32 @@ var player;
 player = new Player();
 tangentScene.add(player);
 
+var camera = new TANGENT.Camera();
+
 function main(t) {
-
-  var cameraLookAt = new THREE.Vector3();
-
   debug.clearRect(0, 0, debug.canvas.width, debug.canvas.height);
   debug.fillStyle = '#fff';
-
-  if (player) {
-    camera.position.x += (player.position.x - camera.position.x) / 5;
-    camera.position.y += (player.position.y - camera.position.y) / 5;
-    cameraLookAt.z = 0;
-  }
-
 
   input.update();
   tangentScene.update();
   tangentScene.collide();
+
+  cx.clearRect(0, 0, cx.canvas.width, cx.canvas.height);
+  cx.save();
+  cx.scale(1, -1);
+
+  if(player) {
+    camera.position.x += (player.position.x - camera.position.x) / 10;
+    camera.position.y += (player.position.y - camera.position.y) / 10;
+  }
+
+  camera.frame(cx);
+
   tangentScene.draw();
 
+  cx.restore();
+
   requestAnimationFrame(main);
-  renderer.render(scene, camera);
 }
 
 main();
