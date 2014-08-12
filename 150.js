@@ -2,7 +2,7 @@ var track = new Audio();
 track.src = 'hand.ogg';
 track.bpm = 125.0;
 track.offset = -0.075;
-track.volume = 0;
+track.volume = 0.2;
 
 var aspect = 16/9;
 var height = 720;
