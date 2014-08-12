@@ -10,7 +10,7 @@ cx.canvas.height = 768;
 var debug = document.createElement('canvas');
 document.body.appendChild(debug);
 debug = debug.getContext('2d');
-
+debug.font = '16pt Courier';
 var tangentScene = new TANGENT.Scene();
 
 var input = new TANGENT.Input();
@@ -146,6 +146,8 @@ Player.prototype.draw = function () {
   cx.fillStyle='#109010';
   cx.translate(this.position.x - this.size.x * 0.5, this.position.y - this.size.y * 0.5);
   cx.fillRect(0,0,this.size.x,this.size.y)
+  cx.strokeStyle='#50b050';
+  cx.strokeRect(0,0,this.size.x,this.size.y)
   cx.restore();
 };
 
@@ -162,6 +164,8 @@ Wall.prototype.draw = function () {
   cx.fillStyle='#606060';
   cx.translate(this.position.x - this.size.x * 0.5, this.position.y - this.size.y * 0.5);
   cx.fillRect(0,0,this.size.x,this.size.y)
+  cx.strokeStyle='#808080';
+  cx.strokeRect(0,0,this.size.x,this.size.y)
   cx.restore();
 };
 
@@ -192,12 +196,96 @@ Platform.prototype.update = function (t) {
   this.deltaPosition.subVectors(this.position, this.deltaPosition);
 };
 
+var Editor = function () {
+  this.position = new THREE.Vector2();
+  this.mode = 0;
+};
+
+Editor.prototype.gridLines = 4;
+Editor.prototype.gridPow = 3;
+Editor.prototype.gridSize = 16;
+
+Editor.prototype.update = function () {
+  if(input.keys[39] === 1 || input.keys[39] > 20){
+    this.position.x += this.gridSize
+  }
+  if(input.keys[37] === 1 || input.keys[37] > 20){
+    this.position.x -= this.gridSize
+  }
+  if(input.keys[38] === 1 || input.keys[38] > 20){
+    this.position.y += this.gridSize
+  }
+  if(input.keys[40] === 1 || input.keys[40] > 20){
+    this.position.y -= this.gridSize
+  }
+
+  if(input.keys[88] === 1){
+    this.mode = this.mode === 1 ? 0 : 1;
+  }
+
+  if(input.keys[90] === 1){
+    tangentScene.add(new Wall(this.position.x|0, this.position.y|0, 16, 16));
+  }
+
+  if(input.keys[33] === 1){
+    this.gridPow++;
+    this.gridPow = Math.max(0, Math.min(7, this.gridPow));
+  }
+
+  if(input.keys[34] === 1){
+    this.gridPow--;
+    this.gridPow = Math.max(0, Math.min(7, this.gridPow));
+  }
+
+  this.gridSize = Math.pow(2, this.gridPow);
+
+  if(input.keys[83] === 1){
+    this.position.x = this.gridSize * Math.floor(this.position.x / this.gridSize);
+    this.position.y = this.gridSize * Math.floor(this.position.y / this.gridSize);
+  }
+
+
+};
+
+Editor.prototype.draw = function () {
+  cx.save();
+  cx.translate(this.position.x, this.position.y);
+
+  cx.strokeStyle = '#a0a0a0';
+  if(this.mode){
+    cx.strokeStyle = '#ff8080';
+  }
+
+  for(var i=0;i<this.gridLines;i++){
+    cx.beginPath();
+    cx.moveTo(-this.gridSize / 2, 0);
+    cx.lineTo( this.gridSize / 2, 0);
+    cx.moveTo(0, -this.gridSize / 2);
+    cx.lineTo(0,  this.gridSize / 2);
+    cx.stroke();
+
+    cx.strokeRect(-this.gridSize / 2, -this.gridSize / 2, this.gridSize, this.gridSize);
+  }
+
+  debug.fillText(this.position.x + ', ' + this.position.y, 10, 32);
+  debug.fillText('X: mode', 10, 48);
+  if(this.mode){
+    debug.fillText('Z: delete', 10, 64);
+  }else{
+    debug.fillText('Z: place', 10, 64);
+  }
+  debug.fillText('S: snap', 10, 80);
+
+  debug.fillText('Grid Size: ' + this.gridSize, 10, 96);
+
+
+  cx.restore();
+};
+
 // tangentScene.add(new Wall(0, -80, 128, 16));
 // tangentScene.add(new Platform(-64, -128, 64, 16));
 // tangentScene.add(new Platform(-96, -128, 64, 16));
 
-var player;
-player = new Player();
 
 tangentScene.loadScene({"p":Platform, "w":Wall}, [
   ["w", 0, -80, 16, 16],
@@ -209,7 +297,13 @@ tangentScene.loadScene({"p":Platform, "w":Wall}, [
 
 ]);
 
-tangentScene.add(player);
+if(false){
+  var player = new Player();
+  tangentScene.add(player);
+}else{
+  var editor = new Editor();
+  tangentScene.add(editor);
+}
 
 var camera = new TANGENT.Camera();
 camera.zoom = 2;
@@ -229,6 +323,9 @@ function main(t) {
   if(player) {
     camera.position.x += (player.position.x - camera.position.x) / 10;
     camera.position.y += (player.position.y - camera.position.y) / 10;
+  }else if(editor){
+    camera.position.x += (editor.position.x - camera.position.x) / 20;
+    camera.position.y += (editor.position.y - camera.position.y) / 20;
   }
 
   camera.frame(cx);
