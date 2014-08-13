@@ -16,6 +16,7 @@ var tangentScene = new TANGENT.Scene();
 var input = new TANGENT.Input();
 document.body.onkeydown = function (e) {
   input.keyPress(e.keyCode);
+  console.log(e.keyCode);
 };
 
 document.body.onkeyup = function (e) {
@@ -26,9 +27,9 @@ var world = {
   gravity: new THREE.Vector2(0, -0.2),
 };
 
-var Player = function(position) {
+var Player = function(x, y) {
   this.velocity = new THREE.Vector2();
-  this.position = position || new THREE.Vector2();
+  this.position = new THREE.Vector2(x, y);
   this.size = new THREE.Vector2(12, 16);
   this.rayDown = new TANGENT.Ray(new THREE.Vector2(), TANGENT.RayDirection.DOWN, 8);
   this.boxCollider = new TANGENT.BoxCollider(new THREE.Vector2(),
@@ -36,6 +37,7 @@ var Player = function(position) {
   this.physParent = null;
 };
 
+Player.prototype.type = 'player';
 Player.prototype.thrustX = 0.1;
 Player.prototype.thrustAirX = 0.05;
 Player.prototype.thrustJump = -4;
@@ -159,6 +161,7 @@ var Wall = function (posX, posY, sizeX, sizeY) {
   this.collider = true;
 };
 
+Wall.prototype.type = 'wall';
 Wall.prototype.draw = function () {
   cx.save();
   cx.fillStyle='#606060';
@@ -182,6 +185,7 @@ var Platform = function (posX, posY, sizeX, sizeY) {
   this.deltaPosition = new THREE.Vector2();
 };
 
+Platform.prototype.type = 'platform';
 Platform.prototype.draw = function () {
   cx.save();
   cx.fillStyle='#606060';
@@ -199,6 +203,12 @@ Platform.prototype.update = function (t) {
 var Editor = function () {
   this.position = new THREE.Vector2();
   this.mode = 0;
+  this.spawnEntityIdx = 0;
+
+  this.spawnEntityEnum = [];
+  for(var i in entityMap) {
+    this.spawnEntityEnum.push(i);
+  }
 };
 
 Editor.prototype.gridLines = 4;
@@ -206,6 +216,15 @@ Editor.prototype.gridPow = 3;
 Editor.prototype.gridSize = 16;
 
 Editor.prototype.update = function () {
+
+  if(input.keys[36] === 1 && this.mode === 0){
+    this.spawnEntityIdx = (this.spawnEntityIdx - 1).wrap(this.spawnEntityEnum.length);
+  }
+
+  if(input.keys[35] === 1 && this.mode === 0){
+    this.spawnEntityIdx = (this.spawnEntityIdx + 1).wrap(this.spawnEntityEnum.length);
+  }
+
   if(input.keys[39] === 1 || input.keys[39] > 20){
     this.position.x += this.gridSize
   }
@@ -224,7 +243,15 @@ Editor.prototype.update = function () {
   }
 
   if(input.keys[90] === 1){
-    tangentScene.add(new Wall(this.position.x|0, this.position.y|0, 16, 16));
+    tangentScene.add(tangentScene.ConstructEntity(
+      entityMap[this.spawnEntityEnum[this.spawnEntityIdx]],
+      [
+        this.position.x,
+        this.position.y,
+        20,
+        20
+      ]
+    ));
   }
 
   if(input.keys[33] === 1){
@@ -272,11 +299,13 @@ Editor.prototype.draw = function () {
   if(this.mode){
     debug.fillText('Z: delete', 10, 64);
   }else{
-    debug.fillText('Z: place', 10, 64);
+    debug.fillText('Z: place ' + this.spawnEntityEnum[this.spawnEntityIdx], 10, 64);
   }
-  debug.fillText('S: snap', 10, 80);
+  debug.fillText('HOME/END: cycle entities', 10, 80);
 
-  debug.fillText('Grid Size: ' + this.gridSize, 10, 96);
+  debug.fillText('S: snap', 10, 96);
+
+  debug.fillText('Grid Size: ' + this.gridSize, 10, 112);
 
 
   cx.restore();
@@ -286,15 +315,18 @@ Editor.prototype.draw = function () {
 // tangentScene.add(new Platform(-64, -128, 64, 16));
 // tangentScene.add(new Platform(-96, -128, 64, 16));
 
+var entityMap = {
+  "platform":Platform,
+  "wall":Wall,
+  "player":Player
+};
 
-tangentScene.loadScene({"p":Platform, "w":Wall}, [
-  ["w", 0, -80, 16, 16],
-  ["w", 128, -80, 128, 16],
-
-  ["w", -64, -80, 8, 16],
-  ["w", -96, -80, 8, 16],
-  ["w", -128, -80, 8, 16],
-
+tangentScene.loadScene(entityMap, [
+  ["wall", 0, -80, 16, 16],
+  ["wall", 128, -80, 128, 16],
+  ["wall", -64, -80, 8, 16],
+  ["wall", -96, -80, 8, 16],
+  ["wall", -128, -80, 8, 16],
 ]);
 
 if(false){

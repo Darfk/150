@@ -1,6 +1,7 @@
 var TANGENT = {};
 
 Math.TAU = Math.PI * 2;
+Number.prototype.wrap = function(max){return(this<0?this%max+max:this%max);};
 
 TANGENT.ColliderType = {
   NONE: 0,
@@ -40,7 +41,7 @@ TANGENT.Scene.prototype.collide = function (){
   }
 };
 
-TANGENT.Scene.prototype.constructEntity = function (constructor, args) {
+TANGENT.Scene.prototype.ConstructEntity = function (constructor, args) {
   function F() {
     return constructor.apply(this, args);
   }
@@ -50,7 +51,7 @@ TANGENT.Scene.prototype.constructEntity = function (constructor, args) {
 
 TANGENT.Scene.prototype.loadScene = function (entityMap, data) {
   for(var i in data) {
-    this.add(this.constructEntity(entityMap[data[i][0]], data[i].slice(1)));
+    this.add(this.ConstructEntity(entityMap[data[i][0]], data[i].slice(1)));
   }
 };
 
