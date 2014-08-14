@@ -15,7 +15,8 @@ Coin.prototype.serialize = function () {
 
 Coin.prototype.draw = function () {
   cx.save();
-  cx.fillStyle='#f0f000';
+  cx.fillStyle='#8042e0';
+  // Divide this by 2, hehe
   if(this.glimmer) {
     cx.fillStyle='#ffffff';
   }
@@ -25,5 +26,5 @@ Coin.prototype.draw = function () {
 };
 
 Coin.prototype.update = function (t) {
-  this.glimmer = Math.sin(t * 0.1 + this.position.x + this.position.y) > 0.9;
+  this.glimmer = Math.random()>0.99;
 };

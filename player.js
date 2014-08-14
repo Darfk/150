@@ -6,6 +6,7 @@ var Player = function(x, y) {
   this.boxCollider = new TANGENT.BoxCollider(new THREE.Vector2(),
                                               new THREE.Vector2(this.size.x, this.size.y));
   this.physParent = null;
+  this.coin = 0;
 };
 
 Player.prototype.type = 'player';
@@ -92,6 +93,7 @@ Player.prototype.update = function (t) {
 
     }else if(o.type === 'coin') {
 
+      self.coin ++;
       o.trash = true;
 
     }else{

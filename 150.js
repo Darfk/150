@@ -9,13 +9,14 @@ cx.canvas.height = 768;
 var debug = document.createElement('canvas');
 document.body.appendChild(debug);
 debug = debug.getContext('2d');
+debug.canvas.width = 256;
+debug.canvas.height = 10 * 16;
 debug.font = '16pt Courier';
 var tangentScene = new TANGENT.Scene();
 
 var input = new TANGENT.Input();
 document.body.onkeydown = function (e) {
   input.keyPress(e.keyCode);
-  //console.log(e.keyCode);
 };
 
 document.body.onkeyup = function (e) {
@@ -65,13 +66,23 @@ function switchMode() {
 switchMode();
 
 function main(t) {
-  debug.clearRect(0, 0, debug.canvas.width, debug.canvas.height);
   debug.fillStyle = '#fff';
+  debug.save();
+  debug.fillStyle = '#000';
+  debug.globalAlpha = 0.75;
+  debug.clearRect(0, 0, debug.canvas.width, debug.canvas.height);
+  debug.fillRect(0, 0, debug.canvas.width, debug.canvas.height);
+  debug.restore();
 
   if(mode){
-    debug.fillText("P: Switch to editor", 10, 16);
+    var y = 0;
+    debug.fillText("P: editor", 10, (++y*16));
+    debug.fillText('Z: jump', 10, (++y*16));
+    debug.fillText('←/→: move', 10, (++y*16));
+    debug.fillText('arbitrarium: ' + player.coin, 10, (++y*16));
   }else{
-    debug.fillText("P: Switch to game", 10, 16);
+    var y = 0;
+    debug.fillText("P: game", 10, (++y*16));
   }
 
   input.update();
