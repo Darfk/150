@@ -16,12 +16,24 @@ TANGENT.RayDirection = {
 };
 
 TANGENT.Scene = function () {
-    this.entities = [];
+  this.entities = [];
+  this.entityMap = {};
 }
 
 TANGENT.Scene.prototype.add = function(e) {
   this.entities.push(e);
 }
+
+TANGENT.Scene.prototype.registerEntityTypes = function(constructors) {
+  var self = this;
+  constructors.forEach(function (t) {
+    self.registerEntityType(t);
+  })
+};
+
+TANGENT.Scene.prototype.registerEntityType = function(constructor) {
+  this.entityMap[constructor.prototype.type] = constructor;
+};
 
 TANGENT.Scene.prototype.collide = function (){
   return;
@@ -41,7 +53,11 @@ TANGENT.Scene.prototype.collide = function (){
   }
 };
 
-TANGENT.Scene.prototype.ConstructEntity = function (constructor, args) {
+TANGENT.Scene.prototype.createEntity = function (type, args) {
+  return this.constructEntity(this.entityMap[type], args);
+}
+
+TANGENT.Scene.prototype.constructEntity = function (constructor, args) {
   function F() {
     return constructor.apply(this, args);
   }
@@ -49,10 +65,21 @@ TANGENT.Scene.prototype.ConstructEntity = function (constructor, args) {
   return new F();  
 };
 
-TANGENT.Scene.prototype.loadScene = function (entityMap, data) {
+TANGENT.Scene.prototype.loadScene = function (data) {
+  this.entities = [];
   for(var i in data) {
-    this.add(this.ConstructEntity(entityMap[data[i][0]], data[i].slice(1)));
+    this.add(this.createEntity(data[i][0], data[i].slice(1)));
   }
+};
+
+TANGENT.Scene.prototype.serialize = function () {
+  var r = [];
+  this.entities.forEach(function (e) {
+    if(e.serialize) {
+      r.push(e.serialize());
+    }
+  });
+  return r;
 };
 
 TANGENT.sortCollisionResultsByPenetration = function (a, b) {
@@ -91,14 +118,18 @@ TANGENT.Scene.prototype.draw = function (){
 }; 
 
 TANGENT.Scene.prototype.destroy = function (){
+  var self = this;
+  var tmp = [];
   this.entities.forEach(function (e, i) {
     if(e.trash){
       if(e.destroy) {
         e.destroy();
       }
-      delete this.entities[i];
+    }else{
+      tmp.push(e);
     }
   });
+  this.entities = tmp;
 };
 
 TANGENT.Camera = function() {
