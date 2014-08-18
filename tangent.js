@@ -145,10 +145,31 @@ TANGENT.Camera.prototype.frame = function(cx) {
   cx.translate(-this.position.x, -this.position.y);
 };
 
+TANGENT.Camera.prototype.screenToWorld = function(point) {
+  // For lack of proper matrix math
+
+  point.x -= cx.canvas.width * 0.5;
+  point.x /= this.zoom;
+
+  point.y -= cx.canvas.height * 0.5;
+  point.y *= -1;
+  point.y /= this.zoom;
+
+  return point;
+};
+
+// TODO: Proper support for mouse clicks
+
+
 TANGENT.Input = function() {
   this.keys = [];
   this.keyPressFrame = [];
   this.keyReleaseFrame = [];
+  this.mouseButtonPressFrame = [];
+  this.mouseButtonReleaseFrame = [];
+  this.mouseX = undefined;
+  this.mouseY = undefined;
+  this.mouseButtons = [];
   
   for(var i=0;i<255;i++) {
     this.keys[i] = 0;
@@ -162,15 +183,28 @@ TANGENT.Input = function() {
     this.keyPressFrame[i] = 0;
   }
   
-}
+};
 
 TANGENT.Input.prototype.keyPress = function (c) {
   this.keyPressFrame[c] = true;
-}
+};
 
 TANGENT.Input.prototype.keyRelease = function (c) {
   this.keyPressFrame[c] = false;
-}
+};
+
+TANGENT.Input.prototype.mouseMove = function (x, y) {
+  this.mouseX = x;
+  this.mouseY = y;
+};
+
+TANGENT.Input.prototype.mouseButtonPress = function (c) {
+  this.mouseButtonPressFrame[c] = true;
+};
+
+TANGENT.Input.prototype.mouseButtonRelease = function (c) {
+  this.mouseButtonPressFrame[c] = false;
+};
 
 TANGENT.Input.prototype.update = function() {
   for(var i=0;i<255;i++) {
@@ -180,6 +214,15 @@ TANGENT.Input.prototype.update = function() {
       this.keys[i] = 0;
     }
   }
+
+  for(var i=0;i<3;i++) {
+    if(this.mouseButtonPressFrame[i]) {
+      ++this.mouseButtons[i];
+    }else{
+      this.mouseButtons[i] = 0;
+    }
+  }
+
 };
 
 
