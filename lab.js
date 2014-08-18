@@ -76,16 +76,19 @@ Block.prototype.update = function (t) {
   this.pens = [];
 
   var self = this;
+
+  this.restingPoints = [];
+
   this.boxCollider.OnCollision = function (x, y, o) { 
-    self.drawResting = true;
     self.pens.push(new THREE.Vector2(x, y));
     self.surfacePositionY.y = self.position.y + y;
     self.surfacePositionX.x = self.position.x + x;
+    self.restingPoints.push (new THREE.Vector2(self.surfacePositionX.x, self.surfacePositionX.y + (x / self.lastDiff.x) * self.lastDiff.y));
+    self.restingPoints.push (new THREE.Vector2(self.surfacePositionY.x + (y / self.lastDiff.y) * self.lastDiff.x, self.surfacePositionY.y))
   };
 
   for(var i in this.pens) {
-    // self.properPosition.x = self.surfacePositionX.x;
-    // self.properPosition.y = self.surfacePositionX.y + (self.pens[i].x / self.lastDiff.x) * self.lastDiff.y;
+    
   }
 
   tangentScene.ColliderCast(this.boxCollider);
@@ -101,43 +104,16 @@ Block.prototype.draw = function () {
   cx.strokeRect(0,0,this.size.x,this.size.y)
   cx.restore();
 
-  if (this.drawResting) {
-    // cx.save();
-    // cx.globalAlpha = 0.2;
-    // cx.fillStyle='#109010';
-    // cx.translate(this.surfacePosition.x - this.size.x * 0.5, this.surfacePosition.y - this.size.y * 0.5);
-    // cx.fillRect(0,0,this.size.x,this.size.y)
-    // cx.strokeStyle='#50b050';
-    // cx.strokeRect(0,0,this.size.x,this.size.y)
-    // cx.restore();
-
-    for(var i in this.pens) {
-      this.properPosition.x = this.surfacePositionY.x + (this.pens[i].y / this.lastDiff.y) * this.lastDiff.x;
-      this.properPosition.y = this.surfacePositionY.y;
-
-      cx.save();
-      cx.globalAlpha = 0.5;
-      cx.fillStyle='#901010';
-      cx.translate(this.properPosition.x - this.size.x * 0.5, this.properPosition.y - this.size.y * 0.5);
-      cx.fillRect(0,0,this.size.x,this.size.y)
-      cx.strokeStyle='#b05050';
-      cx.strokeRect(0,0,this.size.x,this.size.y)
-      cx.restore();
-
-      this.properPosition.x = this.surfacePositionX.x;
-      this.properPosition.y = this.surfacePositionX.y + (this.pens[i].x / this.lastDiff.x) * this.lastDiff.y;
-
-      cx.save();
-      cx.globalAlpha = 0.5;
-      cx.fillStyle='#901010';
-      cx.translate(this.properPosition.x - this.size.x * 0.5, this.properPosition.y - this.size.y * 0.5);
-      cx.fillRect(0,0,this.size.x,this.size.y)
-      cx.strokeStyle='#b05050';
-      cx.strokeRect(0,0,this.size.x,this.size.y)
-      cx.restore();
-
-    }
-
+  for(var i in this.restingPoints) {
+    var r = this.restingPoints[i];
+    cx.save();
+    cx.globalAlpha = 0.5;
+    cx.fillStyle='#901010';
+    cx.translate(r.x - this.size.x * 0.5, r.y - this.size.y * 0.5);
+    cx.fillRect(0,0,this.size.x,this.size.y)
+    cx.strokeStyle='#b05050';
+    cx.strokeRect(0,0,this.size.x,this.size.y)
+    cx.restore();
   }
 
   cx.save();
@@ -162,7 +138,7 @@ Block.prototype.draw = function () {
 
 // tangentScene.add(new Wall(-64, 0, 64, 64));
 tangentScene.add(new Wall(0, 0, 64, 64));
-// tangentScene.add(new Wall(48, 0, 16, 16));
+tangentScene.add(new Wall(48, 0, 16, 16));
 
 var block;
 tangentScene.add(block = new Block());
