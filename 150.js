@@ -51,19 +51,27 @@ tangentScene.registerEntityTypes([Wall, JumpPad, Coin, Platform]);
 var camera = new TANGENT.Camera();
 camera.zoom = 4;
 
-var mode = 0, player, editor;
+var mode = 0, player, editor, track;
 
 function switchMode() {
     mode = mode === 0 ? 1 : 0;
     tangentScene.entities = [];
 
     if(mode){
+
+
       if(typeof localStorage.level !== "undefined"){
         tangentScene.loadScene(JSON.parse(localStorage.level));
       }
+
+      track = new Track();
+      tangentScene.add(track);
+
       console.log("loaded");
       player = new Player();
       tangentScene.add(player);
+
+      
     }else{
       if(typeof localStorage.level !== "undefined"){
         tangentScene.loadScene(JSON.parse(localStorage.level));

@@ -8,7 +8,7 @@ var Platform = function (posX, posY, sizeX, sizeY) {
   this.deltaPosition = new THREE.Vector2();
 };
 
-Platform.prototype.serialize = function (t) {
+Platform.prototype.serialize = function () {
   return [
     this.type,
     this.origin.x,
@@ -32,6 +32,6 @@ Platform.prototype.draw = function () {
 
 Platform.prototype.update = function (t) {
   this.deltaPosition.copy(this.position);
-  this.position.y = this.origin.y + Math.sin(this.origin.x / 128 + t * 0.001 * 0.2 * Math.TAU) * 64;
+  this.position.y = this.origin.y + track.barClamp * 32;
   this.deltaPosition.subVectors(this.position, this.deltaPosition);
 };

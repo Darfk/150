@@ -28,5 +28,5 @@ Coin.prototype.draw = function () {
 };
 
 Coin.prototype.update = function (t) {
-  this.glimmer = Math.random()>0.99;
+  this.glimmer = track.beatClamp < 0.1;
 };
