@@ -97,8 +97,8 @@ Editor.prototype.update = function () {
     this.position.y = this.gridSize * Math.floor(this.position.y / this.gridSize);
   }
 
-  this.boxCollider.size.x = this.gridSize;
-  this.boxCollider.size.y = this.gridSize;
+  this.boxCollider.size.x = this.gridSize -1;
+  this.boxCollider.size.y = this.gridSize -1;
   this.boxCollider.position.x = this.position.x;
   this.boxCollider.position.y = this.position.y;
 
