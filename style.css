@@ -1,9 +1,36 @@
+* {
+    border-collapse: collapse;
+}
+
 html body {
     margin: 0;
     background: black;
 }
 
 canvas {
-    position: absolute;
-    border: 1px solid #ffffff;
+    border: 1px solid #fff;
+}
+
+textarea {
+    border:1px solid #fff;
+    background: #000;
+    color: white;
+    padding: 0;
+}
+
+textarea.invalid {
+    border: 1px solid #f00;
+}
+
+#main {
+    float:left;
+}
+
+#debug ,
+#params {
+    width: 320px;
+    height: 240px;
+    clear: right;
+    float: right;
+    margin: 0;
 }

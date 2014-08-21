@@ -5,23 +5,33 @@ document.body.appendChild(cx);
 cx = cx.getContext('2d');
 cx.canvas.width = 1024;
 cx.canvas.height = 768;
+cx.canvas.id = "main";
 
 var debug = document.createElement('canvas');
 document.body.appendChild(debug);
 debug = debug.getContext('2d');
-debug.canvas.width = 256;
+debug.canvas.width = 240;
 debug.canvas.height = 10 * 16;
 debug.font = '16pt Courier';
+debug.canvas.id = "debug";
+
+var textarea = document.createElement('textarea');
+textarea.id = "params";
+document.body.appendChild(textarea);
+
 var tangentScene = new TANGENT.Scene();
 
 var input = new TANGENT.Input();
-document.body.onkeydown = function (e) {
-  input.keyPress(e.keyCode);
-};
 
-document.body.onkeyup = function (e) {
+cx.canvas.tabIndex = 1;
+cx.canvas.focus();
+cx.canvas.addEventListener("keydown", function (e) {
+  input.keyPress(e.keyCode);
+}, false);
+
+cx.canvas.addEventListener("keyup", function (e) {
   input.keyRelease(e.keyCode);
-};
+}, false);
 
 var world = {
   gravity: new THREE.Vector2(0, -0.2),
@@ -59,11 +69,32 @@ function switchMode() {
         tangentScene.loadScene(JSON.parse(localStorage.level));
       }
       editor = new Editor();
+
+      if(typeof localStorage.spawnParams !== "undefined"){
+        editor.SpawnParamsString = localStorage.spawnParams;
+        editor.MakeParams();
+        textarea.value = localStorage.spawnParams;
+      }
       tangentScene.add(editor);
     }
 }
 
 switchMode();
+
+textarea.addEventListener("keyup", function (e) {
+  e.stopPropagation();
+  if(!editor) return;
+  editor.SpawnParamsString = e.target.value;
+  if (editor.MakeParams() === true) {
+    e.target.className = "";
+  }else{
+    e.target.className = "invalid";
+  }
+}, false);
+
+if(editor) {
+  textarea.value = editor.SpawnParamsString;
+}
 
 function main(t) {
   debug.fillStyle = '#fff';
@@ -104,8 +135,8 @@ function main(t) {
     camera.position.x += (player.position.x - camera.position.x) / 10;
     camera.position.y += (player.position.y - camera.position.y) / 10;
   }else{
-    camera.position.x += (editor.position.x - camera.position.x) / 20;
-    camera.position.y += (editor.position.y - camera.position.y) / 20;
+    camera.position.x += (editor.position.x - camera.position.x) / 4;
+    camera.position.y += (editor.position.y - camera.position.y) / 4;
   }
 
   camera.frame(cx);
@@ -118,4 +149,3 @@ function main(t) {
 }
 
 main();
-

@@ -1,6 +1,6 @@
 var Coin = function (posX, posY) {
   this.position = new THREE.Vector3(posX, posY, 0);
-  this.size = new THREE.Vector2(8, 8);
+  this.size = new THREE.Vector2(4, 4);
   this.collider = true;
 };
 
@@ -20,8 +20,10 @@ Coin.prototype.draw = function () {
   if(this.glimmer) {
     cx.fillStyle='#ffffff';
   }
-  cx.translate(this.position.x - this.size.x * 0.5, this.position.y - this.size.y * 0.5);
-  cx.fillRect(0,0,this.size.x,this.size.y)
+  cx.translate(this.position.x, this.position.y);
+  cx.beginPath();
+  cx.arc(0, 0, this.size.x * 0.5, 0, 2 * Math.PI, false);
+  cx.fill();
   cx.restore();
 };
 

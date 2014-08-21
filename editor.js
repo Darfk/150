@@ -1,10 +1,14 @@
 var Editor = function () {
   this.position = new THREE.Vector2();
   this.mode = 0;
+  this.SpawnParamsString = "[x, y, 8, 8]";
+  this.spawnParams = [];
   this.spawnEntity = null;
   this.spawnEntityIdx = 0;
   this.boxCollider = new TANGENT.BoxCollider(new THREE.Vector2(), new THREE.Vector2(8,8));
 
+  var self = this;
+  
   this.spawnEntityEnum = [];
   for(var i in tangentScene.entityMap) {
     this.spawnEntityEnum.push(i);
@@ -25,18 +29,12 @@ Editor.prototype.update = function () {
 
   if(input.keys[65] === 1){
     this.spawnEntityIdx = (this.spawnEntityIdx - 1).wrap(this.spawnEntityEnum.length);
-    this.spawnEntity = tangentScene.createEntity(
-      this.spawnEntityEnum[this.spawnEntityIdx],
-      [this.position.x, this.position.y, 8, 8]
-    );
+    this.MakeParams();
   }
 
   if(input.keys[83] === 1){
     this.spawnEntityIdx = (this.spawnEntityIdx + 1).wrap(this.spawnEntityEnum.length);
-    this.spawnEntity = tangentScene.createEntity(
-      this.spawnEntityEnum[this.spawnEntityIdx],
-      [this.position.x, this.position.y, 8, 8]
-    );
+    this.MakeParams();
   }
 
   if(input.keys[79] === 1) {
@@ -55,15 +53,19 @@ Editor.prototype.update = function () {
 
   if(input.keys[39] === 1 || input.keys[39] > 20){
     this.position.x += this.gridSize
+    this.MakeParams();
   }
   if(input.keys[37] === 1 || input.keys[37] > 20){
     this.position.x -= this.gridSize
+    this.MakeParams();
   }
   if(input.keys[38] === 1 || input.keys[38] > 20){
     this.position.y += this.gridSize
+    this.MakeParams();
   }
   if(input.keys[40] === 1 || input.keys[40] > 20){
     this.position.y -= this.gridSize
+    this.MakeParams();
   }
 
   if(input.keys[88]){
@@ -76,7 +78,7 @@ Editor.prototype.update = function () {
   if(input.keys[90] === 1){
     tangentScene.add(tangentScene.createEntity(
       this.spawnEntityEnum[this.spawnEntityIdx],
-      [this.position.x, this.position.y, 8, 8]
+       this.spawnParams
     ));
   }
 
@@ -144,4 +146,25 @@ Editor.prototype.draw = function () {
 
 
   cx.restore();
+};
+
+Editor.prototype.MakeParams = function () {
+  // this is so the user can define what the params will be
+  var self = this;
+  try {
+    (function () {
+      var x = self.position.x, y = self.position.y;
+      self.spawnParams = eval(self.SpawnParamsString);
+    })();
+  }catch(e){
+    return e;
+  }
+
+  this.spawnEntity = tangentScene.createEntity(
+    this.spawnEntityEnum[this.spawnEntityIdx],
+    this.spawnParams
+  );
+
+  localStorage.setItem("spawnParams", this.SpawnParamsString);
+  return true;
 };

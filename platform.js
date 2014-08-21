@@ -11,8 +11,8 @@ var Platform = function (posX, posY, sizeX, sizeY) {
 Platform.prototype.serialize = function (t) {
   return [
     this.type,
-    this.position.x,
-    this.position.y,
+    this.origin.x,
+    this.origin.y,
     this.size.x,
     this.size.y,
   ];
