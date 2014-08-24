@@ -113,6 +113,9 @@ Player.prototype.update = function (t) {
           if(o.nonStationary) {
             self.physParent = o;
           }
+          if(o.type === 'button'){
+            o.trigger('press', self);
+          }
         }
       }
 

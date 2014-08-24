@@ -92,7 +92,7 @@ Editor.prototype.update = function () {
 
   this.boxCollider.size.x = this.gridSize - 1;
   this.boxCollider.size.y = this.gridSize - 1;
-  this.boxCollider.position.x = this.position.x;
+ this.boxCollider.position.x = this.position.x;
   this.boxCollider.position.y = this.position.y;
 
 };
@@ -124,16 +124,14 @@ Editor.prototype.draw = function () {
     cx.stroke();
   }
 
-  var y=1;
-
-  debug.fillText('Z: place ' + this.spawnEntityEnum[this.spawnEntityIdx], 10, (++y*16));
-  debug.fillText('X: delete', 10, (++y*16));
-  debug.fillText('A/S: prev/next', 10, (++y*16));
-  debug.fillText('Q: snap grid', 10, (++y*16));
-  debug.fillText('W/E: -/+ grid', 10, (++y*16));
-  debug.fillText('O: save', 10, (++y*16));
-  debug.fillText('grid: ' + this.gridSize, 10, (++y*16));
-  debug.fillText('x, y: ' + this.position.x + ', ' + this.position.y, 10, (++y*16));
+  debug.fillText('Z: place ' + this.spawnEntityEnum[this.spawnEntityIdx], 10, ++debug.textLineNumber*debug.textLineHeight);
+  debug.fillText('X: delete', 10, ++debug.textLineNumber*debug.textLineHeight);
+  debug.fillText('A/S: prev/next', 10, ++debug.textLineNumber*debug.textLineHeight);
+  debug.fillText('Q: snap grid', 10, ++debug.textLineNumber*debug.textLineHeight);
+  debug.fillText('W/E: -/+ grid', 10, ++debug.textLineNumber*debug.textLineHeight);
+  debug.fillText('O: save', 10, ++debug.textLineNumber*debug.textLineHeight);
+  debug.fillText('grid: ' + this.gridSize, 10, ++debug.textLineNumber*debug.textLineHeight);
+  debug.fillText('x, y: ' + this.position.x + ', ' + this.position.y, 10, ++debug.textLineNumber*debug.textLineHeight);
 
 
   cx.restore();

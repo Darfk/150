@@ -32,6 +32,14 @@ Platform.prototype.draw = function () {
 
 Platform.prototype.update = function (t) {
   this.deltaPosition.copy(this.position);
-  this.position.y = this.origin.y + track.barClamp * 32;
+
+
+
+  if(track.bar % 2 === 0) {
+    this.targetPosition
+  }else{
+    
+  }
+
   this.deltaPosition.subVectors(this.position, this.deltaPosition);
 };

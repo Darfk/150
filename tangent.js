@@ -18,6 +18,7 @@ TANGENT.RayDirection = {
 TANGENT.Scene = function () {
   this.entities = [];
   this.entityMap = {};
+  this.events = {};
 }
 
 TANGENT.Scene.prototype.add = function(e) {
@@ -66,11 +67,19 @@ TANGENT.Scene.prototype.constructEntity = function (constructor, args) {
 };
 
 TANGENT.Scene.prototype.loadScene = function (data) {
-  this.entities = [];
   for(var i in data) {
     this.add(this.createEntity(data[i][0], data[i].slice(1)));
   }
 };
+
+TANGENT.Scene.prototype.clear = function () {
+  for(var i in this.entities) {
+    if(this.entities[i].destroy) {
+      this.entities[i].destroy();
+    }
+  }
+  this.entities = [];
+}
 
 TANGENT.Scene.prototype.serialize = function () {
   var r = [];
@@ -80,6 +89,25 @@ TANGENT.Scene.prototype.serialize = function () {
     }
   });
   return r;
+};
+
+TANGENT.Scene.prototype.listen = function (thisArg, event, c) {
+  if(typeof this.events[event] === 'undefined') {
+    this.events[event] = [];
+  }
+  this.events[event].push({thisArg:thisArg, c:c});
+}
+
+TANGENT.Scene.prototype.trigger = function (event, params) {
+  var events = event.split(',');
+  for(var j in events){
+    if(typeof this.events[event] !== 'undefined'){
+      for(var i in this.events[event]){
+        this.events[event][i].c.apply(this.events[event][i].thisArg, params);
+      }
+    }
+  }
+    
 };
 
 TANGENT.sortCollisionResultsByPenetration = function (a, b) {

@@ -41,7 +41,7 @@ var world = {
 // tangentScene.add(new Platform(-64, -128, 64, 16));
 // tangentScene.add(new Platform(-96, -128, 64, 16));
 
-tangentScene.registerEntityTypes([Wall, JumpPad, Coin, Platform]);
+tangentScene.registerEntityTypes([Wall, JumpPad, Coin, Platform, Button]);
 
 // tangentScene.add(new JumpPad(0, -64));
 // tangentScene.add(new JumpPad(64, -64));
@@ -54,37 +54,36 @@ camera.zoom = 4;
 var mode = 0, player, editor, track;
 
 function switchMode() {
-    mode = mode === 0 ? 1 : 0;
-    tangentScene.entities = [];
+  mode = mode === 0 ? 1 : 0;
 
-    if(mode){
+  tangentScene.clear();
 
-
-      if(typeof localStorage.level !== "undefined"){
-        tangentScene.loadScene(JSON.parse(localStorage.level));
-      }
-
-      track = new Track();
-      tangentScene.add(track);
-
-      console.log("loaded");
-      player = new Player();
-      tangentScene.add(player);
-
-      
-    }else{
-      if(typeof localStorage.level !== "undefined"){
-        tangentScene.loadScene(JSON.parse(localStorage.level));
-      }
-      editor = new Editor();
-
-      if(typeof localStorage.spawnParams !== "undefined"){
-        editor.SpawnParamsString = localStorage.spawnParams;
-        editor.MakeParams();
-        textarea.value = localStorage.spawnParams;
-      }
-      tangentScene.add(editor);
+  if(mode){
+    if(typeof localStorage.level !== "undefined"){
+      tangentScene.loadScene(JSON.parse(localStorage.level));
     }
+
+    track = new Track();
+    tangentScene.add(track);
+
+    console.log("loaded");
+    player = new Player();
+    tangentScene.add(player);
+
+    
+  }else{
+    if(typeof localStorage.level !== "undefined"){
+      tangentScene.loadScene(JSON.parse(localStorage.level));
+    }
+    editor = new Editor();
+
+    if(typeof localStorage.spawnParams !== "undefined"){
+      editor.SpawnParamsString = localStorage.spawnParams;
+      editor.MakeParams();
+      textarea.value = localStorage.spawnParams;
+    }
+    tangentScene.add(editor);
+  }
 }
 
 switchMode();
@@ -106,6 +105,8 @@ if(editor) {
 
 function main(t) {
   debug.fillStyle = '#fff';
+  debug.textLineNumber = 0;
+  debug.textLineHeight = 14;
   debug.save();
   debug.fillStyle = '#000';
   debug.globalAlpha = 0.75;
@@ -114,14 +115,12 @@ function main(t) {
   debug.restore();
 
   if(mode){
-    var y = 0;
-    debug.fillText("P: editor", 10, (++y*16));
-    debug.fillText('Z: jump', 10, (++y*16));
-    debug.fillText('←/→: move', 10, (++y*16));
-    debug.fillText('arbitrarium: ' + player.coin, 10, (++y*16));
+    debug.fillText("P: editor", 10, (++debug.textLineNumber*debug.textLineHeight));
+    debug.fillText('Z: jump', 10, (++debug.textLineNumber*debug.textLineHeight));
+    debug.fillText('←/→: move', 10, (++debug.textLineNumber*debug.textLineHeight));
+    debug.fillText('arbitrarium: ' + player.coin, 10, (++debug.textLineNumber*debug.textLineHeight));
   }else{
-    var y = 0;
-    debug.fillText("P: game", 10, (++y*16));
+    debug.fillText("P: game", 10, (++debug.textLineNumber*debug.textLineHeight));
   }
 
   input.update();
